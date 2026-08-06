@@ -2,21 +2,41 @@ import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 
 export async function POST() {
-  try {
-    const email = "alexis.jcastillo@outlook.com"
-    const password = "Test123!"
-    const fullName = "Alexis J. Castillo"
+  const email = process.env.ADMIN_EMAIL
+  const password = process.env.ADMIN_PASSWORD
+  const fullName = process.env.ADMIN_FULL_NAME || "Admin"
 
+  if (!email || !password) {
+    return NextResponse.json(
+      {
+        error:
+          "ADMIN_EMAIL and ADMIN_PASSWORD environment variables are not set.",
+      },
+      { status: 400 }
+    )
+  }
+
+  if (password.length < 8) {
+    return NextResponse.json(
+      { error: "ADMIN_PASSWORD must be at least 8 characters." },
+      { status: 400 }
+    )
+  }
+
+  try {
     const { data: user, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: fullName, role: "super_admin" },
+        user_metadata: {
+          full_name: fullName,
+          role: "super_admin",
+          temp_password: true,
+        },
       })
 
     if (createError) {
-      // If user already exists, try to fetch it
       if (createError.message.includes("already exists")) {
         const { data: existingUser } =
           await supabaseAdmin.auth.admin.listUsers()

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { generatePassword } from "@/lib/generate-password"
+import { requireSuperAdmin } from "@/lib/require-admin"
 
 export async function POST(request: Request) {
+  const admin = await requireSuperAdmin()
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const {
       name,

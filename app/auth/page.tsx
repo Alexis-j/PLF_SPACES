@@ -24,6 +24,9 @@ export default function AuthPage() {
 
     const supabase = createClient()
 
+    const ensureProfile = () =>
+      fetch("/api/auth/ensure-profile", { method: "POST" })
+
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -34,6 +37,8 @@ export default function AuthPage() {
         setLoading(false)
         return
       }
+
+      await ensureProfile()
 
       const {
         data: { user },
@@ -49,11 +54,12 @@ export default function AuthPage() {
       else if (role === "business_owner") router.push("/dashboard")
       else router.push("/")
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { full_name: fullName, role: "customer" },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (error) {
@@ -61,8 +67,17 @@ export default function AuthPage() {
         setLoading(false)
         return
       }
-      setError("")
-      alert("Check your email to confirm your account.")
+
+      await ensureProfile()
+
+      if (data?.session) {
+        const role = data.user?.user_metadata?.role ?? "customer"
+        if (role === "business_owner") router.push("/dashboard")
+        else router.push("/")
+      } else {
+        setError("")
+        alert("Check your email to confirm your account.")
+      }
     }
 
     setLoading(false)
@@ -183,7 +198,9 @@ export default function AuthPage() {
 
           {mode === "signin" && (
             <p className="mt-4 text-center text-xs text-muted-foreground">
-              Demo admin: alexis.jcastillo@outlook.com / Test123!
+              <Link href="/" className="underline hover:text-foreground">
+                ← Back to home
+              </Link>
             </p>
           )}
 

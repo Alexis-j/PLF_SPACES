@@ -1,33 +1,32 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { requireSuperAdmin } from "@/lib/require-admin"
+import { requireBusinessAccess } from "@/lib/require-business-access"
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireSuperAdmin()
-  if (!admin) {
+  const access = await requireBusinessAccess()
+  if (!access) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  try {
-    const { id } = await params
+  const { id } = await params
 
+  try {
     const { error } = await supabaseAdmin
       .from("reviews")
       .delete()
       .eq("id", id)
+      .eq("business_id", access.businessId)
 
     if (error) throw error
 
     return NextResponse.json({ message: "Review deleted" })
   } catch (error) {
+    console.error("Delete review error:", error)
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to delete review",
-      },
+      { error: error instanceof Error ? error.message : "Failed to delete review" },
       { status: 500 }
     )
   }

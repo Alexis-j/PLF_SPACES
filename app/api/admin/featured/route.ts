@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { requireSuperAdmin } from "@/lib/require-admin"
 
 export async function PUT(request: Request) {
+  const admin = await requireSuperAdmin()
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const { businessId, field, value } = await request.json()
 

@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { requireSuperAdmin } from "@/lib/require-admin"
+
+async function authorized() {
+  const admin = await requireSuperAdmin()
+  if (!admin) {
+    return { error: true, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  }
+  return { error: false }
+}
 
 export async function GET() {
+  const auth = await authorized()
+  if (auth.error) return auth.response
+
   try {
     const { data, error } = await supabaseAdmin
       .from("categories")
@@ -19,6 +31,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await authorized()
+  if (auth.error) return auth.response
+
   try {
     const { name, description } = await request.json()
 
@@ -43,6 +58,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await authorized()
+  if (auth.error) return auth.response
+
   try {
     const { id, name, description } = await request.json()
 
@@ -71,6 +89,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await authorized()
+  if (auth.error) return auth.response
+
   try {
     const { id } = await request.json()
 

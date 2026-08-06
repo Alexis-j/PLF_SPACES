@@ -11,7 +11,6 @@ import {
   Navigation,
   Layers,
   View,
-  Store,
   UtensilsCrossed,
   Scissors,
   ShoppingBag,
@@ -21,7 +20,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { Category, Business } from "@/lib/types"
-import { businesses } from "@/lib/data"
 
 const categoryIcons: Record<Category, LucideIcon> = {
   Restaurants: UtensilsCrossed,
@@ -41,8 +39,19 @@ const filters: Category[] = [
   "Events",
 ]
 
-export function MapExplore() {
-  const [active, setActive] = useState<Business>(businesses[0])
+function positionFor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  return {
+    top: `${12 + (hash % 76)}%`,
+    left: `${8 + ((hash >> 8) % 82)}%`,
+  }
+}
+
+export function MapExplore({ businesses }: { businesses: Business[] }) {
+  const [active, setActive] = useState<Business | null>(businesses[0] ?? null)
   const [filter, setFilter] = useState<Category | "All">("All")
 
   const visible =
@@ -112,7 +121,7 @@ export function MapExplore() {
             <div className="flex max-h-[280px] flex-col gap-1 overflow-y-auto p-2 lg:max-h-[520px]">
               {visible.map((place) => {
                 const Icon = categoryIcons[place.category]
-                const isActive = place.id === active.id
+                const isActive = place.id === active?.id
                 return (
                   <Link
                     key={place.id}
@@ -179,25 +188,9 @@ export function MapExplore() {
               </button>
 
               {visible.map((place) => {
-                const positions: Record<string, { top: string; left: string }> =
-                  {
-                    "centro-caribbean": { top: "30%", left: "24%" },
-                    "delicias-latinas": { top: "35%", left: "28%" },
-                    "la-taqueria": { top: "54%", left: "42%" },
-                    cantina: { top: "40%", left: "64%" },
-                    "la-platanera": { top: "22%", left: "54%" },
-                    "el-maiz": { top: "66%", left: "70%" },
-                    "onda-latina": { top: "40%", left: "30%" },
-                    "terra-latina": { top: "72%", left: "32%" },
-                    "bom-sabor": { top: "48%", left: "50%" },
-                    salsarica: { top: "28%", left: "60%" },
-                  }
-                const pos = positions[place.id] || {
-                  top: "50%",
-                  left: "50%",
-                }
+                const pos = positionFor(place.id)
                 const Icon = categoryIcons[place.category]
-                const isActive = place.id === active.id
+                const isActive = place.id === active?.id
                 return (
                   <button
                     key={place.id}
@@ -219,39 +212,47 @@ export function MapExplore() {
 
               <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80">
                 <div className="rounded-2xl border border-border bg-background p-3 shadow-xl">
-                  <div className="flex gap-3">
-                    <div className="relative size-20 shrink-0 overflow-hidden rounded-xl">
-                      <Image
-                        src={active.image || "/placeholder.svg"}
-                        alt={active.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col justify-center">
-                      <h3 className="truncate text-sm font-semibold">
-                        {active.name}
-                      </h3>
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="size-3" />
-                        {active.location}
-                      </p>
-                      <div className="mt-1 flex items-center gap-1 text-xs">
-                        <Star className="size-3 fill-primary text-primary" />
-                        <span className="font-medium">{active.rating}</span>
-                        <span className="text-muted-foreground">
-                          · {active.reviewCount} reviews
-                        </span>
+                  {active ? (
+                    <>
+                      <div className="flex gap-3">
+                        <div className="relative size-20 shrink-0 overflow-hidden rounded-xl">
+                          <Image
+                            src={active.image || "/placeholder.svg"}
+                            alt={active.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex min-w-0 flex-col justify-center">
+                          <h3 className="truncate text-sm font-semibold">
+                            {active.name}
+                          </h3>
+                          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="size-3" />
+                            {active.location}
+                          </p>
+                          <div className="mt-1 flex items-center gap-1 text-xs">
+                            <Star className="size-3 fill-primary text-primary" />
+                            <span className="font-medium">{active.rating}</span>
+                            <span className="text-muted-foreground">
+                              · {active.reviewCount} reviews
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/businesses/${active.id}`}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-3 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-                  >
-                    <View className="size-4" />
-                    View business
-                  </Link>
+                      <Link
+                        href={`/businesses/${active.id}`}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-3 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+                      >
+                        <View className="size-4" />
+                        View business
+                      </Link>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No businesses to show yet.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

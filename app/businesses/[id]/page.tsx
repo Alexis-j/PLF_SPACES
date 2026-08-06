@@ -1,9 +1,6 @@
-"use client"
-
-import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useParams, notFound } from "next/navigation"
+import { notFound } from "next/navigation"
 import {
   ArrowLeft,
   Star,
@@ -12,37 +9,41 @@ import {
   Mail,
   Globe,
   Camera,
-  Heart,
-  Share2,
   Clock,
   BadgeCheck,
-  View,
   MessageCircle,
   Calendar,
-  ChevronRight,
   ExternalLink,
   Send,
   Bookmark,
+  Share2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { businesses, reviews, posts, events } from "@/lib/data"
+import { getBusinessById, getReviews, getPosts, getEvents } from "@/lib/data"
+import { BusinessActions } from "@/components/business/business-actions"
+import { TourLauncher } from "@/components/business/tour-launcher"
 
-export default function BusinessDetailPage() {
-  const params = useParams()
-  const business = businesses.find((b) => b.id === params.id)
+export default async function BusinessDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+
+  const [business, reviews, posts, events] = await Promise.all([
+    getBusinessById(id),
+    getReviews(id),
+    getPosts(id),
+    getEvents(id),
+  ])
 
   if (!business) {
     notFound()
   }
 
-  const [isFollowing, setIsFollowing] = useState(false)
-  const businessReviews = reviews.filter(
-    (r) => r.businessId === business.id
-  )
-  const businessPosts = posts.filter((p) => p.businessId === business.id)
-  const businessEvents = events.filter((e) => e.businessId === business.id)
+  const businessReviews = reviews.filter((r) => r.businessId === business.id)
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,24 +109,7 @@ export default function BusinessDetailPage() {
             </div>
 
             <div className="flex shrink-0 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-full"
-              >
-                <Share2 className="size-4" />
-                Share
-              </Button>
-              <Button
-                size="sm"
-                className="gap-2 rounded-full"
-                onClick={() => setIsFollowing((v) => !v)}
-              >
-                <Heart
-                  className={`size-4 ${isFollowing ? "fill-current" : ""}`}
-                />
-                {isFollowing ? "Following" : "Follow"}
-              </Button>
+              <BusinessActions businessId={business.id} />
             </div>
           </div>
 
@@ -158,18 +142,10 @@ export default function BusinessDetailPage() {
                         className="object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-foreground/30">
-                        <button
-                          onClick={() =>
-                            window.open(
-                              business.matterportTourUrl,
-                              "_blank"
-                            )
-                          }
-                          className="flex items-center gap-3 rounded-full bg-background px-6 py-3 text-sm font-semibold text-foreground shadow-xl transition-transform hover:scale-105"
-                        >
-                          <View className="size-5" />
-                          Launch 3D Tour
-                        </button>
+                        <TourLauncher
+                          url={business.matterportTourUrl}
+                          businessName={business.name}
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
@@ -228,7 +204,7 @@ export default function BusinessDetailPage() {
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {review.createdAt}
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -240,11 +216,11 @@ export default function BusinessDetailPage() {
               </section>
 
               {/* Posts */}
-              {businessPosts.length > 0 && (
+              {posts.length > 0 && (
                 <section>
                   <h2 className="font-heading text-xl font-bold">Updates</h2>
                   <div className="mt-4 space-y-4">
-                    {businessPosts.map((post) => (
+                    {posts.map((post) => (
                       <div
                         key={post.id}
                         className="rounded-2xl border border-border bg-card p-4"
@@ -259,11 +235,9 @@ export default function BusinessDetailPage() {
                             />
                           </div>
                         )}
-                        <p className="text-sm leading-relaxed">
-                          {post.content}
-                        </p>
+                        <p className="text-sm leading-relaxed">{post.content}</p>
                         <span className="mt-2 block text-xs text-muted-foreground">
-                          {post.createdAt}
+                          {new Date(post.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     ))}
@@ -272,11 +246,11 @@ export default function BusinessDetailPage() {
               )}
 
               {/* Events */}
-              {businessEvents.length > 0 && (
+              {events.length > 0 && (
                 <section>
                   <h2 className="font-heading text-xl font-bold">Events</h2>
                   <div className="mt-4 space-y-3">
-                    {businessEvents.map((event) => (
+                    {events.map((event) => (
                       <div
                         key={event.id}
                         className="flex items-start gap-4 rounded-2xl border border-border bg-card p-4"

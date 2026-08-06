@@ -10,6 +10,31 @@ export default function AuthCallbackPage() {
   const [message, setMessage] = useState("Completing setup...")
 
   useEffect(() => {
+    const redirectByRole = (role: string | null | undefined) => {
+      if (role === "super_admin") router.push("/admin")
+      else if (role === "business_owner") router.push("/dashboard")
+      else router.push("/")
+    }
+
+    const completeSetup = async (supabase: ReturnType<typeof createClient>) => {
+      await fetch("/api/auth/ensure-profile", { method: "POST" })
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        redirectByRole(profile?.role)
+        return true
+      }
+      return false
+    }
+
     const handleCallback = async () => {
       const supabase = createClient()
 
@@ -24,44 +49,16 @@ export default function AuthCallbackPage() {
           refresh_token: refreshToken || "",
         })
 
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-
-          const role = profile?.role
-          if (role === "super_admin") router.push("/admin")
-            else if (role === "business_owner") router.push("/dashboard")
-          else router.push("/")
-          return
-        }
+        const done = await completeSetup(supabase)
+        if (done) return
       }
 
       const code = new URLSearchParams(window.location.search).get("code")
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser()
-          if (user) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", user.id)
-              .single()
-
-            const role = profile?.role
-            if (role === "super_admin") router.push("/admin")
-            else if (role === "business_owner") router.push("/dashboard")
-            else router.push("/")
-            return
-          }
+          const done = await completeSetup(supabase)
+          if (done) return
         }
       }
 

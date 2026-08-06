@@ -4,7 +4,6 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
-  Star,
   ArrowRight,
   UtensilsCrossed,
   Scissors,
@@ -15,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { CATEGORIES, type Category, type Business } from "@/lib/types"
-import { businesses } from "@/lib/data"
 import { BusinessCard } from "./business-card"
 
 const categoryIcons: Record<Category, LucideIcon> = {
@@ -27,7 +25,11 @@ const categoryIcons: Record<Category, LucideIcon> = {
   Events: PartyPopper,
 }
 
-export function FeaturedBusinesses() {
+export function FeaturedBusinesses({
+  businesses,
+}: {
+  businesses: Business[]
+}) {
   const [active, setActive] = useState<Category>("Restaurants")
 
   const filtered =

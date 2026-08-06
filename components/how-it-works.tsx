@@ -1,4 +1,4 @@
-import { Search, Compass, Heart, MessageCircle } from "lucide-react"
+import { Search, Compass, Heart } from "lucide-react"
 
 const steps = [
   {

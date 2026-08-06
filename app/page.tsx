@@ -6,15 +6,20 @@ import { ImmersiveTour } from "@/components/immersive-tour"
 import { HowItWorks } from "@/components/how-it-works"
 import { BusinessCta } from "@/components/business-cta"
 import { SiteFooter } from "@/components/site-footer"
+import { getBusinesses } from "@/lib/data"
 
-export default function Page() {
+export const revalidate = 60
+
+export default async function Page() {
+  const businesses = await getBusinesses()
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
         <Hero />
-        <MapExplore />
-        <FeaturedBusinesses />
+        <MapExplore businesses={businesses} />
+        <FeaturedBusinesses businesses={businesses} />
         <ImmersiveTour />
         <HowItWorks />
         <BusinessCta />

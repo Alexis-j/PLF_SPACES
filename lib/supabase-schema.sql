@@ -154,6 +154,30 @@ CREATE POLICY "Profiles are viewable by everyone"
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Automatically create a profile row whenever a new auth user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data ->> 'full_name',
+    COALESCE(NEW.raw_user_meta_data ->> 'role', 'customer')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- Businesses: anyone can read, owner and admin can update
 CREATE POLICY "Businesses are viewable by everyone"
   ON public.businesses FOR SELECT USING (true);
@@ -185,3 +209,46 @@ CREATE POLICY "Authenticated users can follow"
 
 CREATE POLICY "Users can unfollow"
   ON public.followers FOR DELETE USING (auth.uid() = user_id);
+
+-- Business members: visible to the business members and admins,
+-- managed by the business owner or a super admin
+CREATE POLICY "Members are viewable by business members"
+  ON public.business_members FOR SELECT USING (
+    auth.uid() IN (
+      SELECT user_id FROM public.business_members WHERE business_id = business_id
+    ) OR
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'super_admin')
+  );
+
+CREATE POLICY "Owner or admin can manage members"
+  ON public.business_members FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.business_members
+      WHERE business_id = business_members.business_id
+        AND user_id = auth.uid()
+        AND role = 'owner'
+    ) OR
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'super_admin')
+  );
+
+-- Posts: anyone can read, business members can write
+CREATE POLICY "Posts are viewable by everyone"
+  ON public.posts FOR SELECT USING (true);
+
+-- Events: anyone can read, business members can write
+CREATE POLICY "Events are viewable by everyone"
+  ON public.events FOR SELECT USING (true);
+
+-- Media: anyone can read
+CREATE POLICY "Media are viewable by everyone"
+  ON public.media FOR SELECT USING (true);
+
+-- Favorites: private to each user
+CREATE POLICY "Users can view own favorites"
+  ON public.favorites FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can add favorites"
+  ON public.favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can remove favorites"
+  ON public.favorites FOR DELETE USING (auth.uid() = user_id);

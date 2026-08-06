@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react"
 import {
-  Store,
   Plus,
   X,
   BadgeCheck,
-  Star,
   Loader2,
   Check,
   MapPin,

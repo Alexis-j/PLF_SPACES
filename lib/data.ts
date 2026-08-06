@@ -1,235 +1,143 @@
+import { createClient } from "@/lib/supabase-server"
 import type { Business, Review, Post, Event } from "./types"
 
-export const businesses: Business[] = [
-  {
-    id: "centro-caribbean",
-    name: "Centro Caribbean",
-    description:
-      "Authentic Caribbean cuisine in the heart of Zurich. From mofongo to fresh seafood, every dish transports you to the islands.",
-    shortDescription: "Authentic Caribbean cuisine in Zurich",
-    category: "Restaurants",
-    location: "Zürich, Switzerland",
-    address: "Langstrasse 120, 8004 Zürich",
-    image: "/spaces/cat-restaurants.png",
-    logo: "/placeholder-logo.svg",
-    rating: 4.8,
-    reviewCount: 156,
-    matterportTourUrl: "https://my.matterport.com/show/?m=sM6TBFuXTYa",
-    phone: "+41 44 123 45 67",
-    email: "info@centrocaribbean.ch",
-    website: "https://centrocaribbean.ch",
-    instagram: "@centrocaribbean",
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-  {
-    id: "delicias-latinas",
-    name: "Delicias Latinas",
-    description:
-      "Latin American flavors from across the continent. Arepas, empanadas, and traditional dishes made with love.",
-    shortDescription: "Latin American flavors",
-    category: "Restaurants",
-    location: "Zürich, Switzerland",
-    address: "Badenerstrasse 45, 8004 Zürich",
-    image: "/spaces/cat-restaurants.png",
-    rating: 4.7,
-    reviewCount: 98,
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-  {
-    id: "la-taqueria",
-    name: "La Taqueria (Kreis 4)",
-    description:
-      "The most authentic tacos in town. Hand-made tortillas, fresh salsas, and a vibrant atmosphere in Zurich's Kreis 4.",
-    shortDescription: "Authentic tacos in Kreis 4",
-    category: "Restaurants",
-    location: "Zürich, Switzerland",
-    address: "Ankerstrasse 78, 8004 Zürich",
-    image: "/spaces/cat-restaurants.png",
-    rating: 4.9,
-    reviewCount: 213,
-    matterportTourUrl: "https://my.matterport.com/show/?m=sM6TBFuXTYa",
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-  {
-    id: "cantina",
-    name: "Cantina",
-    description:
-      "Mexican-inspired cantina serving bold flavors, craft cocktails, and a lively dining experience.",
-    shortDescription: "Mexican-inspired cantina",
-    category: "Restaurants",
-    location: "Zürich, Switzerland",
-    address: "Kanzleistrasse 12, 8004 Zürich",
-    image: "/spaces/cat-restaurants.png",
-    rating: 4.6,
-    reviewCount: 134,
-    verified: true,
-    featured: false,
-    founding: true,
-  },
-  {
-    id: "la-platanera",
-    name: "La Platanera",
-    description:
-      "Latin grocery store offering authentic products from Central and South America. Your one-stop shop for Latin ingredients.",
-    shortDescription: "Latin grocery store",
-    category: "Shops",
-    location: "Zürich, Switzerland",
-    address: "Hohlstrasse 85, 8004 Zürich",
-    image: "/spaces/cat-shops.png",
-    rating: 4.5,
-    reviewCount: 67,
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-  {
-    id: "el-maiz",
-    name: "El Maiz - Mexican Products GmbH",
-    description:
-      "Specialty Mexican grocery store. Imported products, fresh tortillas, and everything you need for authentic Mexican cooking.",
-    shortDescription: "Mexican specialty store",
-    category: "Shops",
-    location: "Zürich, Switzerland",
-    address: "Löwenstrasse 33, 8001 Zürich",
-    image: "/spaces/cat-shops.png",
-    rating: 4.7,
-    reviewCount: 89,
-    verified: true,
-    featured: false,
-    founding: true,
-  },
-  {
-    id: "onda-latina",
-    name: "Onda Latina",
-    description:
-      "Beauty salon and barber specializing in Latin American hair care, styling, and beauty treatments.",
-    shortDescription: "Latin beauty & hair salon",
-    category: "Beauty & Barber",
-    location: "Zürich, Switzerland",
-    address: "Langstrasse 200, 8005 Zürich",
-    image: "/spaces/cat-beauty.png",
-    rating: 4.8,
-    reviewCount: 112,
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-  {
-    id: "terra-latina",
-    name: "Terra Latina",
-    description:
-      "Latin American store offering a wide selection of products, from groceries to handicrafts and traditional items.",
-    shortDescription: "Latin American products store",
-    category: "Shops",
-    location: "Zürich, Switzerland",
-    address: "Birmensdorferstrasse 55, 8004 Zürich",
-    image: "/spaces/cat-shops.png",
-    rating: 4.4,
-    reviewCount: 73,
-    verified: true,
-    featured: false,
-    founding: true,
-  },
-  {
-    id: "bom-sabor",
-    name: "BOM SABOR",
-    description:
-      "Portuguese and Brazilian cuisine bursting with flavor. Feijoada, pastéis, and the best pão de queijo in town.",
-    shortDescription: "Portuguese & Brazilian cuisine",
-    category: "Restaurants",
-    location: "Zürich, Switzerland",
-    address: "Zwinglistrasse 22, 8004 Zürich",
-    image: "/spaces/cat-restaurants.png",
-    rating: 4.6,
-    reviewCount: 145,
-    verified: true,
-    featured: false,
-    founding: true,
-  },
-  {
-    id: "salsarica",
-    name: "SALSARICA",
-    description:
-      "Dance school bringing the rhythm of Latin America to Zurich. Salsa, bachata, merengue, and more for all levels.",
-    shortDescription: "Latin dance school",
-    category: "Events",
-    location: "Zürich, Switzerland",
-    address: "Hardstrasse 41, 8004 Zürich",
-    image: "/spaces/cat-events.png",
-    rating: 4.9,
-    reviewCount: 178,
-    verified: true,
-    featured: true,
-    founding: true,
-  },
-]
+type BusinessRow = Record<string, unknown>
 
-export const reviews: Review[] = [
-  {
-    id: "r1",
-    businessId: "centro-caribbean",
-    userId: "u1",
-    userName: "Maria G.",
-    rating: 5,
-    comment: "Increíble comida caribeña. El mofongo es auténtico y delicioso. ¡Me sentí como en casa!",
-    createdAt: "2026-05-15",
-  },
-  {
-    id: "r2",
-    businessId: "la-taqueria",
-    userId: "u2",
-    userName: "Carlos R.",
-    rating: 5,
-    comment: "Los tacos más auténticos fuera de México. Las tortillas son hechas a mano. Imperdible.",
-    createdAt: "2026-05-10",
-  },
-  {
-    id: "r3",
-    businessId: "salsarica",
-    userId: "u3",
-    userName: "Anna K.",
-    rating: 5,
-    comment: "Best salsa classes in Zurich! The instructors are passionate and professional.",
-    createdAt: "2026-05-08",
-  },
-]
+export function toBusiness(row: BusinessRow): Business {
+  return {
+    id: String(row.id),
+    name: String(row.name ?? ""),
+    description: String(row.description ?? ""),
+    shortDescription: String(row.short_description ?? ""),
+    category: row.category as Business["category"],
+    location: String(row.location ?? ""),
+    address: String(row.address ?? ""),
+    image: String(row.image ?? "/placeholder.svg"),
+    logo: row.logo ? String(row.logo) : undefined,
+    coverImage: row.cover_image ? String(row.cover_image) : undefined,
+    rating: Number(row.rating ?? 0),
+    reviewCount: Number(row.review_count ?? 0),
+    matterportSpaceId: row.matterport_space_id
+      ? String(row.matterport_space_id)
+      : undefined,
+    matterportTourUrl: row.matterport_tour_url
+      ? String(row.matterport_tour_url)
+      : undefined,
+    phone: row.phone ? String(row.phone) : undefined,
+    email: row.email ? String(row.email) : undefined,
+    website: row.website ? String(row.website) : undefined,
+    instagram: row.instagram ? String(row.instagram) : undefined,
+    ownerId: row.owner_id ? String(row.owner_id) : undefined,
+    verified: Boolean(row.verified),
+    featured: Boolean(row.featured),
+    founding: Boolean(row.founding),
+    openingHours: row.opening_hours ? String(row.opening_hours) : undefined,
+  }
+}
 
-export const posts: Post[] = [
-  {
-    id: "p1",
-    businessId: "centro-caribbean",
-    content:
-      "New summer menu is here! Try our fresh ceviche and mango mojitos. 🥭",
-    image: "/spaces/cat-restaurants.png",
-    createdAt: "2026-06-01",
-  },
-  {
-    id: "p2",
-    businessId: "la-taqueria",
-    content: "Taco Tuesday special: 3 tacos + margarita for CHF 25. Don't miss it! 🌮",
-    createdAt: "2026-05-28",
-  },
-]
+export async function getBusinesses(): Promise<Business[]> {
+  const supabase = await createClient()
 
-export const events: Event[] = [
-  {
-    id: "e1",
-    businessId: "salsarica",
-    title: "Salsa Night - Beginner Workshop",
-    description: "Join us for a fun beginner salsa workshop. No partner needed!",
-    date: "2026-06-20",
-  },
-  {
-    id: "e2",
-    businessId: "cantina",
-    title: "Live Mariachi Night",
-    description: "Enjoy authentic mariachi music while dining. Special menu available.",
-    date: "2026-06-25",
-  },
-]
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("*")
+    .order("name")
+
+  if (error) {
+    console.error("getBusinesses error:", error)
+    return []
+  }
+
+  return (data ?? []).map(toBusiness)
+}
+
+export async function getBusinessById(id: string): Promise<Business | null> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error) {
+    console.error("getBusinessById error:", error)
+    return null
+  }
+
+  return data ? toBusiness(data) : null
+}
+
+export async function getReviews(businessId: string): Promise<Review[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id, rating, comment, created_at, profiles(full_name)")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("getReviews error:", error)
+    return []
+  }
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    businessId,
+    userId: "",
+    userName:
+      (row.profiles as { full_name?: string } | null)?.full_name || "Guest",
+    userAvatar: undefined,
+    rating: Number(row.rating),
+    comment: String(row.comment ?? ""),
+    createdAt: String(row.created_at),
+  }))
+}
+
+export async function getPosts(businessId: string): Promise<Post[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("getPosts error:", error)
+    return []
+  }
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    businessId,
+    content: String(row.content),
+    image: row.image ? String(row.image) : undefined,
+    createdAt: String(row.created_at),
+  }))
+}
+
+export async function getEvents(businessId: string): Promise<Event[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("date", { ascending: true })
+
+  if (error) {
+    console.error("getEvents error:", error)
+    return []
+  }
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    businessId,
+    title: String(row.title),
+    description: String(row.description ?? ""),
+    date: String(row.date),
+    image: row.image ? String(row.image) : undefined,
+  }))
+}
