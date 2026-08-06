@@ -49,6 +49,11 @@ export default function AuthCallbackPage() {
           refresh_token: refreshToken || "",
         })
 
+        if (params.get("type") === "recovery") {
+          router.push("/auth/reset-password")
+          return
+        }
+
         const done = await completeSetup(supabase)
         if (done) return
       }

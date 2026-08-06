@@ -106,8 +106,6 @@ export async function PUT(request: Request) {
         image: body.image || "/spaces/cat-restaurants.png",
         logo: body.logo || null,
         cover_image: body.coverImage || null,
-        matterport_tour_url: body.matterportTourUrl || null,
-        matterport_space_id: body.matterportSpaceId || null,
       })
       .eq("id", businessId)
       .select()

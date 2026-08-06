@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       address,
       ownerEmail,
       image,
+      matterportTourUrl,
     } = await request.json()
 
     if (!name || !category || !ownerEmail) {
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
         location: location || "",
         address: address || "",
         image: image || "/spaces/cat-restaurants.png",
+        matterport_tour_url: matterportTourUrl || null,
         verified: true,
       })
       .select()

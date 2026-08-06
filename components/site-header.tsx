@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Box, Menu, X, LogOut, User } from "lucide-react"
+import { Box, Menu, X, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase-client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -19,7 +18,6 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [role, setRole] = useState<string | null>(null)
-  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -35,15 +33,6 @@ export function SiteHeader() {
       }
     })
   }, [])
-
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    setRole(null)
-    router.push("/")
-    router.refresh()
-  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
@@ -88,15 +77,6 @@ export function SiteHeader() {
                   </Button>
                 </Link>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full gap-2"
-                onClick={handleSignOut}
-              >
-                <LogOut className="size-4" />
-                Sign out
-              </Button>
             </>
           ) : (
             <>
@@ -151,15 +131,6 @@ export function SiteHeader() {
                     </Button>
                   </Link>
                 )}
-                <Button
-                  className="w-full rounded-full"
-                  onClick={() => {
-                    setOpen(false)
-                    handleSignOut()
-                  }}
-                >
-                  Sign out
-                </Button>
               </>
             ) : (
               <Link href="/auth" onClick={() => setOpen(false)}>

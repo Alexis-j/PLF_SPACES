@@ -51,7 +51,12 @@ export function BusinessesTab() {
     location: "",
     address: "",
     ownerEmail: "",
+    matterportTourUrl: "",
   })
+
+  const [matterportEditId, setMatterportEditId] = useState<string | null>(null)
+  const [matterportDraft, setMatterportDraft] = useState("")
+  const [savingMatterport, setSavingMatterport] = useState(false)
 
   const loadBusinesses = async () => {
     const supabase = createClient()
@@ -121,6 +126,7 @@ export function BusinessesTab() {
       location: "",
       address: "",
       ownerEmail: "",
+      matterportTourUrl: "",
     })
     setSaving(false)
     loadBusinesses()
@@ -133,6 +139,23 @@ export function BusinessesTab() {
     )
     setCopied(true)
     setTimeout(() => setCopied(false), 3000)
+  }
+
+  const startMatterportEdit = (biz: BusinessRow) => {
+    setMatterportEditId(biz.id)
+    setMatterportDraft(biz.matterport_tour_url ?? "")
+  }
+
+  const saveMatterport = async (bizId: string) => {
+    setSavingMatterport(true)
+    await fetch(`/api/admin/businesses/${bizId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matterportTourUrl: matterportDraft }),
+    })
+    setSavingMatterport(false)
+    setMatterportEditId(null)
+    loadBusinesses()
   }
 
   if (loading) {
@@ -247,6 +270,17 @@ export function BusinessesTab() {
                 className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+            <div>
+              <label className="text-xs font-medium">Matterport Tour URL</label>
+              <input
+                value={form.matterportTourUrl}
+                onChange={(e) =>
+                  setForm({ ...form, matterportTourUrl: e.target.value })
+                }
+                placeholder="https://my.matterport.com/show/?m=..."
+                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -341,81 +375,122 @@ export function BusinessesTab() {
 
       <div className="space-y-2">
         {businesses.map((biz) => (
-          <div
-            key={biz.id}
-            className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium truncate">{biz.name}</span>
-                {biz.verified && (
-                  <BadgeCheck className="size-4 shrink-0 text-primary" />
-                )}
-                {biz.featured && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                    Featured
-                  </span>
-                )}
-                {biz.founding && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                    Founding
-                  </span>
-                )}
+          <div key={biz.id}>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{biz.name}</span>
+                  {biz.verified && (
+                    <BadgeCheck className="size-4 shrink-0 text-primary" />
+                  )}
+                  {biz.featured && (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      Featured
+                    </span>
+                  )}
+                  {biz.founding && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                      Founding
+                    </span>
+                  )}
+                </div>
+                <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>{biz.category}</span>
+                  {biz.location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="size-3" />
+                      {biz.location}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{biz.category}</span>
-                {biz.location && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="size-3" />
-                    {biz.location}
-                  </span>
-                )}
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => startMatterportEdit(biz)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    matterportEditId === biz.id
+                      ? "bg-primary/10 text-primary"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {biz.matterport_tour_url ? "Tour ✓" : "Tour"}
+                </button>
+                <button
+                  onClick={() => toggleField(biz.id, "featured", !biz.featured)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    biz.featured
+                      ? "bg-primary/10 text-primary"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Featured
+                </button>
+                <button
+                  onClick={() => toggleField(biz.id, "founding", !biz.founding)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    biz.founding
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Founding
+                </button>
+                <button
+                  onClick={() => toggleField(biz.id, "verified", !biz.verified)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    biz.verified
+                      ? "bg-green-100 text-green-700"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Verify
+                </button>
+                <button
+                  onClick={() => handleDelete(biz.id)}
+                  disabled={deleting === biz.id}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                >
+                  {deleting === biz.id ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => toggleField(biz.id, "featured", !biz.featured)}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  biz.featured
-                    ? "bg-primary/10 text-primary"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Featured
-              </button>
-              <button
-                onClick={() => toggleField(biz.id, "founding", !biz.founding)}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  biz.founding
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Founding
-              </button>
-              <button
-                onClick={() => toggleField(biz.id, "verified", !biz.verified)}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  biz.verified
-                    ? "bg-green-100 text-green-700"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Verify
-              </button>
-              <button
-                onClick={() => handleDelete(biz.id)}
-                disabled={deleting === biz.id}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-              >
-                {deleting === biz.id ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Trash2 className="size-4" />
-                )}
-              </button>
-            </div>
+            {matterportEditId === biz.id && (
+              <div className="mt-1 flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                <input
+                  value={matterportDraft}
+                  onChange={(e) => setMatterportDraft(e.target.value)}
+                  placeholder="https://my.matterport.com/show/?m=..."
+                  className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setMatterportEditId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1.5 rounded-full"
+                  disabled={savingMatterport}
+                  onClick={() => saveMatterport(biz.id)}
+                >
+                  {savingMatterport ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  Save
+                </Button>
+              </div>
+            )}
           </div>
         ))}
 

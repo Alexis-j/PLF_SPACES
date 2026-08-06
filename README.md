@@ -66,6 +66,33 @@ npm run lint      # eslint
   (`require-admin.ts`, `require-business-access.ts`), schema SQL.
 - `components/` — componentes de UI, secciones de la landing, tabs del admin y del negocio.
 
+## Roles y permisos
+
+| Rol | Acceso | Qué puede hacer |
+| --- | --- | --- |
+| Visitante (sin sesión) | Público (`/`, `/businesses`, `/businesses/[id]`) | Ver directorio, fichas, mapa y tours 3D de Matterport. Sin acciones de escritura. |
+| `customer` | Público + cuenta | Mismo acceso que el visitante. (Reviews, favoritos y follows están previstos como siguiente paso.) |
+| `business_owner` | `/dashboard` | Editar su negocio, eventos, reviews, equipo (owner/manager). **No** gestiona Matterport. |
+| `manager` | `/dashboard` | Mismo acceso que el owner (miembro del negocio). |
+| `super_admin` | `/admin` | Crear negocios y cuentas de owner (con credenciales temporales), toggles featured/founding/verified, borrar negocios y **asignar/editar la URL del tour de Matterport** de cualquier negocio. |
+
+### Flujo del visitante
+
+1. El visitante entra a `/` (landing) o `/businesses` (directorio) sin registrarse.
+2. Abre una ficha `/businesses/[id]`: ve imágenes, descripción, reviews, eventos y,
+   si el negocio tiene una URL de Matterport asignada por el admin, el botón del tour 3D.
+3. Solo necesita iniciar sesión (con rol adecuado) para `/admin` o `/dashboard`.
+
+### Otros flujos
+
+- **Recuperación de contraseña:** en `/auth` → "Forgot password?" → se envía un link
+  (redirect a `/auth/callback` con `type=recovery`) → la página `/auth/reset-password`
+  permite fijar una contraseña nueva.
+- **Sign out:** solo desde `/dashboard` o `/admin` (no está en el header público).
+- **Matterport:** la URL del tour 3D se gestiona exclusivamente desde `/admin`
+  (en el form de "New Business" o con el botón "Tour" de cada negocio). Los owners
+  no pueden verla ni editarla en su dashboard.
+
 ## Seguridad
 
 - Las API de admin (`/api/admin/*`) verifican que el llamante sea `super_admin`.

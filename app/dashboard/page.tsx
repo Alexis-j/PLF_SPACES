@@ -105,7 +105,6 @@ const emptyForm = {
   image: "",
   logo: "",
   coverImage: "",
-  matterportTourUrl: "",
 }
 
 export default function DashboardPage() {
@@ -230,7 +229,6 @@ export default function DashboardPage() {
       image: b.image || "",
       logo: b.logo || "",
       coverImage: b.cover_image || "",
-      matterportTourUrl: b.matterport_tour_url || "",
     })
     setEditError("")
     setEditSuccess(false)
@@ -1030,16 +1028,6 @@ export default function DashboardPage() {
                   value={editForm.openingHours}
                   onChange={(e) =>
                     setEditForm({ ...editForm, openingHours: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Matterport Tour URL</label>
-                <input
-                  value={editForm.matterportTourUrl}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, matterportTourUrl: e.target.value })
                   }
                   className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                 />
