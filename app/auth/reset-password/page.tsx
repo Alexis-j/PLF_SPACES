@@ -6,6 +6,10 @@ import { Box, Lock, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase-client"
+import {
+  PasswordStrength,
+  passwordStrength,
+} from "@/lib/password"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -32,8 +36,9 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError("")
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
+    const strength = passwordStrength(password)
+    if (!strength.valid) {
+      setError(strength.message)
       return
     }
     if (password !== confirmPassword) {
@@ -114,7 +119,7 @@ export default function ResetPasswordPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="Min. 8 characters"
                       className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                       required
                     />
@@ -129,6 +134,9 @@ export default function ResetPasswordPage() {
                         <Eye className="size-4" />
                       )}
                     </button>
+                  </div>
+                  <div className="mt-1.5">
+                    <PasswordStrength value={password} />
                   </div>
                 </div>
 

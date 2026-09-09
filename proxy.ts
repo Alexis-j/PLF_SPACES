@@ -38,6 +38,15 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse
   }
 
+  const isTempPassword = user.user_metadata?.temp_password === true
+
+  if (isTempPassword) {
+    if (path.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+    return supabaseResponse
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
