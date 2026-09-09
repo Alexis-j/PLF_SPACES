@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Box, Menu, X, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Box, Menu, X, User, LogOut, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase-client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -15,9 +16,11 @@ const navLinks = [
 ]
 
 export function SiteHeader() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [role, setRole] = useState<string | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -32,7 +35,25 @@ export function SiteHeader() {
           .then(({ data }) => setRole(data?.role ?? null))
       }
     })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
+
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setSigningOut(false)
+    setOpen(false)
+    router.push("/")
+    router.refresh()
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
@@ -77,6 +98,20 @@ export function SiteHeader() {
                   </Button>
                 </Link>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full gap-2 text-muted-foreground"
+                onClick={handleSignOut}
+                disabled={signingOut}
+              >
+                {signingOut ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <LogOut className="size-4" />
+                )}
+                Sign out
+              </Button>
             </>
           ) : (
             <>
@@ -131,6 +166,19 @@ export function SiteHeader() {
                     </Button>
                   </Link>
                 )}
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full text-muted-foreground"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                >
+                  {signingOut ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <LogOut className="size-4" />
+                  )}
+                  Sign out
+                </Button>
               </>
             ) : (
               <Link href="/auth" onClick={() => setOpen(false)}>

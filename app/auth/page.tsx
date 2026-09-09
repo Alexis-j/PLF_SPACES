@@ -6,6 +6,10 @@ import { Box, Mail, Lock, Store, Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 }
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase-client"
+import {
+  PasswordStrength,
+  passwordStrength,
+} from "@/lib/password"
 
 type AuthMode = "signin" | "signup" | "reset"
 
@@ -60,6 +64,13 @@ export default function AuthPage() {
 
       redirectByRole(profile?.role)
     } else if (mode === "signup") {
+      const strength = passwordStrength(password)
+      if (!strength.valid) {
+        setError(strength.message)
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -240,7 +251,7 @@ export default function AuthPage() {
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder="Min. 8 characters"
                         className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                         required
                       />
@@ -256,6 +267,11 @@ export default function AuthPage() {
                         )}
                       </button>
                     </div>
+                    {mode === "signup" && (
+                      <div className="mt-1.5">
+                        <PasswordStrength value={password} />
+                      </div>
+                    )}
                   </div>
                 )}
 

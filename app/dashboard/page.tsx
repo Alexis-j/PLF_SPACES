@@ -11,12 +11,11 @@ import {
   Settings,
   Users,
   TrendingUp,
-  Eye,
   LogOut,
   Lock,
   Check,
   AlertTriangle,
-  Eye as EyeIcon,
+  EyeIcon,
   EyeOff,
   X,
   Plus,
@@ -33,6 +32,10 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { createClient } from "@/lib/supabase-client"
 import { CATEGORIES, type Category } from "@/lib/types"
+import {
+  PasswordStrength,
+  passwordStrength,
+} from "@/lib/password"
 
 type Stats = {
   reviews: number
@@ -115,6 +118,7 @@ export default function DashboardPage() {
 
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordError, setPasswordError] = useState("")
@@ -179,8 +183,15 @@ export default function DashboardPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters")
+
+    const strength = passwordStrength(newPassword)
+    if (!strength.valid) {
+      setPasswordError(strength.message)
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match")
       return
     }
 
@@ -204,6 +215,7 @@ export default function DashboardPage() {
 
     setPasswordSuccess(true)
     setNewPassword("")
+    setConfirmPassword("")
     setShowPasswordForm(false)
     setSetupMode(false)
     setChangingPassword(false)
@@ -388,25 +400,17 @@ export default function DashboardPage() {
 
         {setupMode && (
           <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="size-5 shrink-0 text-amber-600 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-amber-800">
-                    Welcome! Please set a new password
-                  </h3>
-                  <p className="mt-1 text-sm text-amber-700">
-                    You&apos;re using a temporary password. Choose a new one to
-                    secure your account.
-                  </p>
-                </div>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="size-5 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-amber-800">
+                  Welcome! Please set a new password
+                </h3>
+                <p className="mt-1 text-sm text-amber-700">
+                  You&apos;re using a temporary password. Choose a new one to
+                  secure your account. This step is required before continuing.
+                </p>
               </div>
-              <button
-                onClick={() => setSetupMode(false)}
-                className="text-amber-600 hover:text-amber-800"
-              >
-                <X className="size-4" />
-              </button>
             </div>
             <Button
               size="sm"
@@ -430,63 +434,91 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {showPasswordForm && (
-          <div className="mb-6 rounded-2xl border border-border bg-card p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Change Password</h3>
-              <button
-                onClick={() => setShowPasswordForm(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
+        {(showPasswordForm || setupMode) && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-8">
             <form
               onSubmit={handleChangePassword}
-              className="mt-4 flex items-end gap-3"
+              className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl"
             >
-              <div className="flex-1">
-                <label className="text-xs font-medium">New Password</label>
-                <div className="mt-1 flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 transition-colors focus-within:border-primary">
-                  <Lock className="size-4 text-muted-foreground" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                    required
-                    minLength={6}
-                  />
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">
+                  {setupMode ? "Set a secure password" : "Change Password"}
+                </h3>
+                {!setupMode && (
                   <button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
+                    onClick={() => setShowPasswordForm(false)}
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <EyeIcon className="size-4" />
-                    )}
+                    <X className="size-4" />
                   </button>
-                </div>
-                {passwordError && (
-                  <p className="mt-1 text-xs text-red-500">{passwordError}</p>
                 )}
               </div>
-              <Button
-                type="submit"
-                size="sm"
-                className="rounded-full gap-1.5 shrink-0"
-                disabled={changingPassword}
-              >
-                {changingPassword ? (
-                  <Eye className="size-4 animate-spin" />
-                ) : (
-                  <Check className="size-4" />
+              {setupMode && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  You must set a new password before continuing to the dashboard.
+                </p>
+              )}
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label className="text-xs font-medium">New Password</label>
+                  <div className="mt-1 flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 transition-colors focus-within:border-primary">
+                    <Lock className="size-4 text-muted-foreground" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min. 8 characters"
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      required
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <EyeIcon className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="mt-1.5">
+                    <PasswordStrength value={newPassword} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Confirm Password</label>
+                  <div className="mt-1 flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 transition-colors focus-within:border-primary">
+                    <Lock className="size-4 text-muted-foreground" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      required
+                    />
+                  </div>
+                </div>
+                {passwordError && (
+                  <p className="text-xs text-red-500">{passwordError}</p>
                 )}
-                Update
-              </Button>
+                <Button
+                  type="submit"
+                  className="w-full rounded-full py-6"
+                  disabled={changingPassword}
+                >
+                  {changingPassword ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  {setupMode ? "Set Password & Continue" : "Update Password"}
+                </Button>
+              </div>
             </form>
           </div>
         )}
