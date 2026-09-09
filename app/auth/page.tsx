@@ -137,7 +137,7 @@ export default function AuthPage() {
                 className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "signin"
                     ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-secondary-foreground hover:text-foreground"
                 }`}
               >
                 Sign In
@@ -148,7 +148,7 @@ export default function AuthPage() {
                 className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                   mode === "signup"
                     ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-secondary-foreground hover:text-foreground"
                 }`}
               >
                 Sign Up

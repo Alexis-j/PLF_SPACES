@@ -76,13 +76,13 @@ export function UsersTab() {
   const roleColor = (role: string) => {
     switch (role) {
       case "super_admin":
-        return "bg-primary/10 text-primary"
+        return "bg-primary text-primary-foreground"
       case "business_owner":
         return "bg-amber-100 text-amber-700"
       case "business_staff":
         return "bg-blue-100 text-blue-700"
       default:
-        return "bg-secondary text-muted-foreground"
+        return "bg-secondary text-secondary-foreground"
     }
   }
 
@@ -99,7 +99,7 @@ export function UsersTab() {
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {(profile.full_name || profile.email).charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">

@@ -49,7 +49,7 @@ export function HowItWorks() {
               <span className="absolute right-6 top-6 font-heading text-5xl font-bold text-secondary">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
                 <Icon className="size-6" />
               </span>
               <h3 className="mt-5 text-lg font-semibold">{step.title}</h3>

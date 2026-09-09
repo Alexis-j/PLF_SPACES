@@ -101,7 +101,7 @@ export default async function BusinessDetailPage({
                     <MapPin className="size-4" />
                     {business.location}
                   </span>
-                  <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">
+                  <span className="rounded-full bg-primary px-3 py-0.5 text-xs font-medium text-primary-foreground">
                     {business.category}
                   </span>
                 </div>
@@ -182,7 +182,7 @@ export default async function BusinessDetailPage({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                          <div className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                             {review.userName.charAt(0)}
                           </div>
                           <div>
@@ -255,7 +255,7 @@ export default async function BusinessDetailPage({
                         key={event.id}
                         className="flex items-start gap-4 rounded-2xl border border-border bg-card p-4"
                       >
-                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                           <Calendar className="size-6" />
                         </span>
                         <div>

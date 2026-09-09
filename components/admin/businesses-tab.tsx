@@ -384,7 +384,7 @@ export function BusinessesTab() {
                     <BadgeCheck className="size-4 shrink-0 text-primary" />
                   )}
                   {biz.featured && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
                       Featured
                     </span>
                   )}
@@ -409,9 +409,9 @@ export function BusinessesTab() {
                 <button
                   onClick={() => startMatterportEdit(biz)}
                   className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                    matterportEditId === biz.id
-                      ? "bg-primary/10 text-primary"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                    matterportEditId === biz.id || biz.matterport_tour_url
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   }`}
                 >
                   {biz.matterport_tour_url ? "Tour ✓" : "Tour"}
@@ -420,8 +420,8 @@ export function BusinessesTab() {
                   onClick={() => toggleField(biz.id, "featured", !biz.featured)}
                   className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     biz.featured
-                      ? "bg-primary/10 text-primary"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   }`}
                 >
                   Featured
@@ -431,7 +431,7 @@ export function BusinessesTab() {
                   className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     biz.founding
                       ? "bg-amber-100 text-amber-700"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   }`}
                 >
                   Founding
@@ -441,7 +441,7 @@ export function BusinessesTab() {
                   className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     biz.verified
                       ? "bg-green-100 text-green-700"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   }`}
                 >
                   Verify

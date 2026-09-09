@@ -63,7 +63,7 @@ export function MapExplore({ businesses }: { businesses: Business[] }) {
     <section id="map" className="bg-secondary/40 py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-3 text-center">
-          <span className="mx-auto inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
+          <span className="mx-auto inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
             <Navigation className="size-3.5" />
             Map-first discovery
           </span>
