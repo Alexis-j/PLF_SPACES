@@ -86,7 +86,7 @@ export function Hero() {
                   className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-foreground text-background"
-                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+                      : "bg-secondary/50 text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground"
                   }`}
                 >
                   <Icon className="size-3.5" />

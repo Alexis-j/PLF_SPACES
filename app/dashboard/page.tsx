@@ -545,7 +545,7 @@ export default function DashboardPage() {
                     key={stat.label}
                     className="rounded-2xl border border-border bg-card p-5"
                   >
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                       <Icon className="size-5" />
                     </span>
                     <p className="mt-3 text-2xl font-bold">{stat.value}</p>
@@ -706,7 +706,7 @@ export default function DashboardPage() {
                       >
                         <div>
                           <div className="flex items-center gap-2">
-                            <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                               {(review.profiles?.full_name || "G").charAt(0)}
                             </div>
                             <p className="text-sm font-medium">
@@ -886,7 +886,7 @@ export default function DashboardPage() {
                           <p className="text-sm font-medium">
                             {member.profiles?.full_name || member.profiles?.email}
                           </p>
-                          <span className="mt-0.5 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium capitalize text-primary">
+                          <span className="mt-0.5 inline-block rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium capitalize text-primary-foreground">
                             {member.role}
                           </span>
                         </div>
