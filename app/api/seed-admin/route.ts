@@ -1,7 +1,46 @@
-import { NextResponse } from "next/server"
+import { createHash, timingSafeEqual } from "node:crypto"
+import { NextResponse, type NextRequest } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 
-export async function POST() {
+// This route mints a super_admin from environment variables, so it must never
+// be reachable by an unauthenticated caller. It is gated on a deployment
+// secret that has to be sent explicitly in the x-seed-secret header.
+//
+// If SEED_ADMIN_SECRET is not configured the route fails closed: creating the
+// first admin is then done with an explicit SQL statement instead.
+function isSeedAuthorized(request: NextRequest): boolean {
+  const expected = process.env.SEED_ADMIN_SECRET
+  if (!expected) return false
+
+  const provided = request.headers.get("x-seed-secret")
+  if (!provided) return false
+
+  // Hash both sides so the comparison is constant-time over equal-length
+  // buffers, which timingSafeEqual requires.
+  const digest = (value: string) =>
+    createHash("sha256").update(value).digest()
+
+  return timingSafeEqual(digest(expected), digest(provided))
+}
+
+export async function POST(request: NextRequest) {
+  if (!process.env.SEED_ADMIN_SECRET) {
+    return NextResponse.json(
+      {
+        error:
+          "SEED_ADMIN_SECRET is not configured. Create the first super_admin directly via SQL instead.",
+      },
+      { status: 503 }
+    )
+  }
+
+  if (!isSeedAuthorized(request)) {
+    return NextResponse.json(
+      { error: "Invalid or missing x-seed-secret header." },
+      { status: 401 }
+    )
+  }
+
   const email = process.env.ADMIN_EMAIL
   const password = process.env.ADMIN_PASSWORD
   const fullName = process.env.ADMIN_FULL_NAME || "Admin"

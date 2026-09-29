@@ -21,10 +21,15 @@ SUPABASE_SERVICE_ROLE_KEY=...
 # Opcionales: para crear el admin inicial
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=una-contraseña-segura
+# Obligatorio para que /api/seed-admin funcione (ver paso 4)
+SEED_ADMIN_SECRET=un-secreto-largo-y-aleatorio
 ```
 
 > `ADMIN_PASSWORD` debe tener al menos 8 caracteres. `ADMIN_EMAIL`/`ADMIN_PASSWORD`
 > se usan solo por el endpoint `/api/seed-admin`.
+>
+> `SEED_ADMIN_SECRET` es obligatorio: sin él, `/api/seed-admin` responde `503` y no
+> crea nada. Genera uno con `openssl rand -hex 32`.
 
 ### 2. Base de datos
 
@@ -32,6 +37,12 @@ Ejecuta `lib/supabase-schema.sql` en el SQL editor de Supabase. Crea las tablas
 (`profiles`, `businesses`, `business_members`, `categories`, `reviews`,
 `followers`, `posts`, `events`, `media`, `favorites`), las políticas RLS y un
 trigger que crea el perfil automáticamente al registrarse.
+
+> Las políticas de `business_members` pasan por las funciones `is_business_member()`
+> e `is_business_owner()` (`SECURITY DEFINER`). Es intencionado: una política que
+> consultara `business_members` desde otra política sobre la misma tabla provoca
+> `infinite recursion detected in policy` en Postgres. No las reemplaces por
+> subconsultas directas.
 
 ### 3. Instalar y correr
 
@@ -44,7 +55,17 @@ npm run dev
 
 Con la app corriendo:
 
-1. **Crear super admin** — `POST /api/seed-admin` (usa `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+1. **Crear super admin** — `POST /api/seed-admin`. El endpoint exige la cabecera
+   `x-seed-secret` con el valor de `SEED_ADMIN_SECRET`:
+
+   ```bash
+   curl -X POST http://localhost:3000/api/seed-admin \
+     -H "x-seed-secret: $SEED_ADMIN_SECRET"
+   ```
+
+   Si prefieres no exponer el endpoint, créalo directamente en el SQL editor de
+   Supabase y deja `SEED_ADMIN_SECRET` sin definir (el endpoint quedará cerrado).
+
 2. **Sembrar negocios** — inicia sesión como admin en `/auth`, entra a `/admin` y
    ejecuta `POST /api/seed-data` (por ejemplo `curl -X POST http://localhost:3000/api/seed-data`
    con la cookie de sesión). Inserta los negocios de ejemplo si la tabla está vacía.
@@ -88,7 +109,7 @@ npm run lint      # eslint
 - **Recuperación de contraseña:** en `/auth` → "Forgot password?" → se envía un link
   (redirect a `/auth/callback` con `type=recovery`) → la página `/auth/reset-password`
   permite fijar una contraseña nueva.
-- **Sign out:** solo desde `/dashboard` o `/admin` (no está en el header público).
+- **Sign out:** disponible en el header público y también dentro de `/dashboard` y `/admin`.
 - **Matterport:** la URL del tour 3D se gestiona exclusivamente desde `/admin`
   (en el form de "New Business" o con el botón "Tour" de cada negocio). Los owners
   no pueden verla ni editarla en su dashboard.
@@ -98,5 +119,7 @@ npm run lint      # eslint
 - Las API de admin (`/api/admin/*`) verifican que el llamante sea `super_admin`.
 - Las API del dashboard (`/api/business/*`) verifican que el llamante sea
   owner/manager del negocio (vía `business_members`).
+- `/api/seed-admin` es la única ruta sin sesión: exige la cabecera `x-seed-secret`
+  (`SEED_ADMIN_SECRET`) y devuelve `503` si esa variable no está definida.
 - Las operaciones de escritura usan la service role key por servidor; las lecturas
   públicas usan las políticas RLS de Supabase.
