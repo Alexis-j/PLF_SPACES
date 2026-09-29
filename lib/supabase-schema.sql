@@ -171,7 +171,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -212,22 +212,45 @@ CREATE POLICY "Users can unfollow"
 
 -- Business members: visible to the business members and admins,
 -- managed by the business owner or a super admin
+--
+-- The membership checks below must go through SECURITY DEFINER helpers.
+-- A policy on business_members that subqueries business_members directly
+-- makes Postgres raise "infinite recursion detected in policy" at query
+-- time, because RLS re-evaluates the same policy for the inner scan.
+-- SECURITY DEFINER runs as the table owner and so bypasses RLS, which
+-- breaks that cycle. search_path is pinned so the function body cannot be
+-- hijacked through a poisoned search_path.
+CREATE OR REPLACE FUNCTION public.is_business_member(target_business_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.business_members
+    WHERE business_id = target_business_id
+      AND user_id = auth.uid()
+  );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
+
+CREATE OR REPLACE FUNCTION public.is_business_owner(target_business_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.business_members
+    WHERE business_id = target_business_id
+      AND user_id = auth.uid()
+      AND role = 'owner'
+  );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
+
+GRANT EXECUTE ON FUNCTION public.is_business_member(UUID) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_business_owner(UUID) TO anon, authenticated, service_role;
+
 CREATE POLICY "Members are viewable by business members"
   ON public.business_members FOR SELECT USING (
-    auth.uid() IN (
-      SELECT user_id FROM public.business_members WHERE business_id = business_id
-    ) OR
+    public.is_business_member(business_id) OR
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'super_admin')
   );
 
 CREATE POLICY "Owner or admin can manage members"
   ON public.business_members FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM public.business_members
-      WHERE business_id = business_members.business_id
-        AND user_id = auth.uid()
-        AND role = 'owner'
-    ) OR
+    public.is_business_owner(business_id) OR
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'super_admin')
   );
 
