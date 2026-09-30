@@ -61,11 +61,17 @@ export async function POST(request: Request) {
 
       userId = newUser.user.id
 
-      await supabaseAdmin.from("profiles").insert({
-        id: userId,
-        email,
-        role: "business_staff",
-      })
+      // upsert y no insert: el trigger on_auth_user_created ya creo el
+      // profile con role='customer'. El insert conflictaba, el error se
+      // ignoraba, y el rol business_staff nunca llegaba a escribirse.
+      await supabaseAdmin.from("profiles").upsert(
+        {
+          id: userId,
+          email,
+          role: "business_staff",
+        },
+        { onConflict: "id" }
+      )
     }
 
     const { data: member, error: memberError } = await supabaseAdmin

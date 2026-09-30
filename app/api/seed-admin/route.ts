@@ -106,14 +106,21 @@ export async function POST(request: NextRequest) {
       throw createError
     }
 
+    // upsert y no insert: el trigger on_auth_user_created ya creo la fila
+    // con role='customer' al crear el usuario de auth. Un insert aqui
+    // fallaba con duplicate key (23505) y la ruta devolvia 500 aunque el
+    // admin se hubiera creado bien.
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .insert({
-        id: user.user.id,
-        email,
-        full_name: fullName,
-        role: "super_admin",
-      })
+      .upsert(
+        {
+          id: user.user.id,
+          email,
+          full_name: fullName,
+          role: "super_admin",
+        },
+        { onConflict: "id" }
+      )
 
     if (profileError) throw profileError
 
