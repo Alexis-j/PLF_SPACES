@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { requireSuperAdmin } from "@/lib/require-admin"
+import { safeUrl } from "@/lib/safe-url"
 
 export async function PUT(
   request: Request,
@@ -17,7 +18,7 @@ export async function PUT(
 
     const { error } = await supabaseAdmin
       .from("businesses")
-      .update({ matterport_tour_url: matterportTourUrl || null })
+      .update({ matterport_tour_url: safeUrl(matterportTourUrl) })
       .eq("id", id)
 
     if (error) throw error

@@ -24,8 +24,15 @@ export default function AuthPage() {
   const [error, setError] = useState("")
   const [resetSent, setResetSent] = useState(false)
 
-  const ensureProfile = () =>
-    fetch("/api/auth/ensure-profile", { method: "POST" })
+  const ensureProfile = async () => {
+    try {
+      const res = await fetch("/api/auth/ensure-profile", { method: "POST" })
+      const data = await res.json().catch(() => null)
+      return { ok: res.ok, data }
+    } catch {
+      return { ok: false, data: null as { role?: string } | null }
+    }
+  }
 
   const redirectByRole = (role: string | null | undefined) => {
     if (role === "super_admin") router.push("/admin")
@@ -51,18 +58,11 @@ export default function AuthPage() {
         return
       }
 
-      await ensureProfile()
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user?.id)
-        .single()
-
-      redirectByRole(profile?.role)
+      // ensureProfile devuelve el role leído de la base con service_role.
+      // Antes se leía profiles con el cliente anon, lo que acoplaba el
+      // login a la policy pública de la tabla.
+      const res = await ensureProfile()
+      redirectByRole(res.ok ? res.data?.role : undefined)
     } else if (mode === "signup") {
       const strength = passwordStrength(password)
       if (!strength.valid) {
@@ -75,7 +75,9 @@ export default function AuthPage() {
         email,
         password,
         options: {
-          data: { full_name: fullName, role: "customer" },
+          // role no se manda: user_metadata lo escribe el cliente y
+          // handle_new_user() asigna siempre 'customer'.
+          data: { full_name: fullName },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
@@ -85,12 +87,16 @@ export default function AuthPage() {
         return
       }
 
-      await ensureProfile()
-
       if (data?.session) {
-        const role = data.user?.user_metadata?.role ?? "customer"
-        redirectByRole(role)
+        // El role viene del response de ensureProfile (leído de la base),
+        // no de user_metadata: el signup es siempre 'customer' y
+        // user_metadata lo escribe el cliente.
+        const res = await ensureProfile()
+        redirectByRole(res.ok ? res.data?.role : undefined)
       } else {
+        // Sin sesión todavía (confirmación por email pendiente): el perfil
+        // lo crea handle_new_user() y no hay nada que redirigir aún.
+        void ensureProfile()
         setError("")
         alert("Check your email to confirm your account.")
       }

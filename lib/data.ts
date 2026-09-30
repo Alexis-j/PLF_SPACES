@@ -3,6 +3,17 @@ import type { Business, Review, Post, Event } from "./types"
 
 type BusinessRow = Record<string, unknown>
 
+// Filas que devuelve get_reviews_with_author (ver migración 001). El tipo
+// es explícito porque el cliente no tiene el schema de Supabase generado:
+// sin él, data llega como any[].
+type ReviewWithAuthor = {
+  id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  user_name: string | null
+}
+
 export function toBusiness(row: BusinessRow): Business {
   return {
     id: String(row.id),
@@ -71,23 +82,25 @@ export async function getBusinessById(id: string): Promise<Business | null> {
 export async function getReviews(businessId: string): Promise<Review[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("id, rating, comment, created_at, profiles(full_name)")
-    .eq("business_id", businessId)
-    .order("created_at", { ascending: false })
+  // Va por la función get_reviews_with_author (SECURITY DEFINER) en lugar
+  // de un embed profiles(full_name). profiles ya no es legible con la anon
+  // key (migración 002), así que el embed devolvería null y las reseñas
+  // aparecerían sin autor. La función hace el join por dentro y expone
+  // solo el nombre: ni user_id ni email.
+  const { data, error } = await supabase.rpc("get_reviews_with_author", {
+    p_business_id: businessId,
+  })
 
   if (error) {
     console.error("getReviews error:", error)
     return []
   }
 
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map((row: ReviewWithAuthor) => ({
     id: String(row.id),
     businessId,
     userId: "",
-    userName:
-      (row.profiles as { full_name?: string } | null)?.full_name || "Guest",
+    userName: String(row.user_name || "Guest"),
     userAvatar: undefined,
     rating: Number(row.rating),
     comment: String(row.comment ?? ""),

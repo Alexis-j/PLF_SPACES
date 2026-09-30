@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { generatePassword } from "@/lib/generate-password"
 import { requireSuperAdmin } from "@/lib/require-admin"
+import { safeUrl } from "@/lib/safe-url"
 
 export async function POST(request: Request) {
   const admin = await requireSuperAdmin()
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
         short_description: shortDescription || "",
         location: location || "",
         address: address || "",
-        image: image || "/spaces/cat-restaurants.png",
-        matterport_tour_url: matterportTourUrl || null,
+        image: safeUrl(image) || "/spaces/cat-restaurants.png",
+        matterport_tour_url: safeUrl(matterportTourUrl),
         verified: true,
       })
       .select()

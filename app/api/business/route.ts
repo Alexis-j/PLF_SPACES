@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { requireBusinessAccess } from "@/lib/require-business-access"
+import { safeUrl, safeHandle } from "@/lib/safe-url"
 
 export async function GET() {
   const access = await requireBusinessAccess()
@@ -89,6 +90,10 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json()
 
+    // Los valores que acaban en un href o en un src pasan por la
+    // allowlist de esquemas: un owner podía guardar javascript: en
+    // website y se ejecutaba en nuestro origen al hacer clic. Lo que
+    // no pasa la allowlist se guarda como NULL, no se guarda el texto.
     const { data, error } = await supabaseAdmin
       .from("businesses")
       .update({
@@ -100,12 +105,12 @@ export async function PUT(request: Request) {
         address: body.address ?? "",
         phone: body.phone || null,
         email: body.email || null,
-        website: body.website || null,
-        instagram: body.instagram || null,
+        website: safeUrl(body.website),
+        instagram: safeHandle(body.instagram),
         opening_hours: body.openingHours || null,
-        image: body.image || "/spaces/cat-restaurants.png",
-        logo: body.logo || null,
-        cover_image: body.coverImage || null,
+        image: safeUrl(body.image) || "/spaces/cat-restaurants.png",
+        logo: safeUrl(body.logo),
+        cover_image: safeUrl(body.coverImage),
       })
       .eq("id", businessId)
       .select()

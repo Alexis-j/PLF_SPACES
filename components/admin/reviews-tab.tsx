@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Trash2, Star, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase-client"
 
 type ReviewRow = {
   id: string
@@ -21,14 +20,24 @@ export function ReviewsTab() {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const load = async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from("reviews")
-      .select("*, profiles(full_name), businesses(name)")
-      .order("created_at", { ascending: false })
+    // Pasa por /api/admin/reviews (service_role). El embed de profiles
+    // sobre reviews requería que profiles fuera legible con la anon key,
+    // y la migración 002 cerró esa policy.
+    try {
+      const res = await fetch("/api/admin/reviews")
+      const payload = await res.json()
 
-    if (data) setReviews(data as unknown as ReviewRow[])
-    setLoading(false)
+      if (!res.ok) {
+        setReviews([])
+        return
+      }
+
+      setReviews((payload.reviews ?? []) as unknown as ReviewRow[])
+    } catch {
+      setReviews([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {

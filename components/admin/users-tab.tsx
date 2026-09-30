@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Loader2, Trash2, Shield, Store, User } from "lucide-react"
-import { createClient } from "@/lib/supabase-client"
 
 type ProfileRow = {
   id: string
@@ -18,14 +17,24 @@ export function UsersTab() {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const load = async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false })
+    // Pasa por /api/admin/users (service_role). Leer profiles con la anon
+    // key dejó de funcionar con la migración 002: profiles ya no es
+    // legible por el público, solo por el propio usuario y por admins.
+    try {
+      const res = await fetch("/api/admin/users")
+      const payload = await res.json()
 
-    if (data) setUsers(data as ProfileRow[])
-    setLoading(false)
+      if (!res.ok) {
+        setUsers([])
+        return
+      }
+
+      setUsers((payload.users ?? []) as ProfileRow[])
+    } catch {
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {

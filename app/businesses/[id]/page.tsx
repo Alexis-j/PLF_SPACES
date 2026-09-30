@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { getBusinessById, getReviews, getPosts, getEvents } from "@/lib/data"
+import { safeUrl, safeHandle } from "@/lib/safe-url"
 import { BusinessActions } from "@/components/business/business-actions"
 import { TourLauncher } from "@/components/business/tour-launcher"
 
@@ -284,6 +285,7 @@ export default async function BusinessDetailPage({
                     <a
                       href={`https://maps.google.com/?q=${encodeURIComponent(business.address)}`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <MapPin className="size-4 shrink-0 text-primary" />
@@ -308,20 +310,25 @@ export default async function BusinessDetailPage({
                       <span>{business.email}</span>
                     </a>
                   )}
-                  {business.website && (
+                  {/* El servidor ya sanea estos campos, pero se vuelve a
+                      pasar por la allowlist aquí: una fila guardada antes
+                      del arreglo seguiría siendo un href peligroso. */}
+                  {safeUrl(business.website) && (
                     <a
-                      href={business.website}
+                      href={safeUrl(business.website)!}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <Globe className="size-4 shrink-0 text-primary" />
                       <span>{business.website}</span>
                     </a>
                   )}
-                  {business.instagram && (
+                  {safeHandle(business.instagram) && (
                     <a
-                      href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+                      href={`https://instagram.com/${safeHandle(business.instagram)}`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <Camera className="size-4 shrink-0 text-primary" />
@@ -358,6 +365,7 @@ export default async function BusinessDetailPage({
                   <a
                     href={`https://maps.google.com/?q=${encodeURIComponent(business.address)}`}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:underline"
                   >
                     <MapPin className="size-4" />
