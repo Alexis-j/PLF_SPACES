@@ -1,5 +1,16 @@
 -- PLF Spaces Database Schema
--- Run this in your Supabase SQL editor
+--
+-- Bootstrap de una instalación VACÍA. No usar para actualizar una base
+-- de datos existente: este archivo usa CREATE TABLE sin IF NOT EXISTS y
+-- falla en la primera tabla que ya existe.
+--
+-- A partir de la migración 001 la fuente de verdad del schema son los
+-- archivos de lib/migrations/. Este documento queda congelado y ya no
+-- refleja la base de datos real (por ejemplo, en la base viva
+-- categories sí tiene RLS y aquí no aparece el ALTER TABLE).
+--
+-- Para evolvear una base existente, pega solo el bloque que necesites
+-- de lib/migrations/*.sql, como se indica en la cabecera de cada uno.
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE public.profiles (
@@ -148,6 +159,9 @@ ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 -- Row Level Security Policies
 
 -- Profiles: users can read any profile, update only their own
+-- OJO: esta policy pública quedó reemplazada por la migración 002
+-- (profiles privados). Se conserva aquí solo para el bootstrap de una
+-- base vacía. Ver lib/migrations/002_profiles_private.sql.
 CREATE POLICY "Profiles are viewable by everyone"
   ON public.profiles FOR SELECT USING (true);
 
